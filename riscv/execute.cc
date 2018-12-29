@@ -2,6 +2,7 @@
 
 #include "processor.h"
 #include "mmu.h"
+#include "disasm.h"
 #include <cassert>
 
 
@@ -43,20 +44,19 @@ static void commit_log_print_insn(state_t* state, reg_t pc, insn_t insn)
   int xlen = state->last_inst_xlen;
   int flen = state->last_inst_flen;
 
-  fprintf(stderr, "%1d ", priv);
-  commit_log_print_value(xlen, 0, pc);
-  fprintf(stderr, " (");
-  commit_log_print_value(insn.length() * 8, 0, insn.bits());
+  // fprintf(stderr, "  {\"priv\":%1d,\"pc\":\"", priv);
+  // commit_log_print_value(xlen, 0, pc);
+  // fprintf(stderr, "\",\"insn\":\"");
+  // commit_log_print_value(insn.length() * 8, 0, insn.bits());
+  // fpintf(stderr, "\"}\n");
 
   if (reg.addr) {
     bool fp = reg.addr & 1;
     int rd = reg.addr >> 1;
     int size = fp ? flen : xlen;
-    fprintf(stderr, ") %c%2d ", fp ? 'f' : 'x', rd);
-    commit_log_print_value(size, reg.data.v[1], reg.data.v[0]);
-    fprintf(stderr, "\n");
-  } else {
-    fprintf(stderr, ")\n");
+    // fprintf(stderr, ",\"op\":{\"kind\":\"reg\",\"size\":\"%d\",\"addr\":\"0x%02x\",\"value\":\"", size, rd);
+    // commit_log_print_value(size, reg.data.v[1], reg.data.v[0]);
+    // fprintf(stderr, "\"}");
   }
   reg.addr = 0;
 #endif
@@ -88,6 +88,55 @@ bool processor_t::slow_path()
   return debug || state.single_step != state.STEP_NONE || state.dcsr.cause;
 }
 
+void processor_t::print_state()
+{
+  fprintf(stdout, "\n{\"kind\":\"state\",");
+  fprintf(stdout, "\"id\":%d,", id);
+  fprintf(stdout, "\"pc\":\"0x%016" PRIx64 "\",", state.pc);
+  fprintf(stdout, "\"prv\":\"0x%016" PRIx64 "\",", state.prv);
+  fprintf(stdout, "\"minstret\":\"0x%016" PRIx64 "\",", state.minstret);
+  fprintf(stdout, "\"misa\":\"0x%016" PRIx64 "\",", state.misa);
+  fprintf(stdout, "\"mstatus\":\"0x%016" PRIx64 "\",", state.mstatus);
+  fprintf(stdout, "\"mepc\":\"0x%016" PRIx64 "\",", state.mepc);
+  fprintf(stdout, "\"mtval\":\"0x%016" PRIx64 "\",", state.mtval);
+  fprintf(stdout, "\"mscratch\":\"0x%016" PRIx64 "\",", state.mscratch);
+  fprintf(stdout, "\"mtvec\":\"0x%016" PRIx64 "\",", state.mtvec);
+  fprintf(stdout, "\"mcause\":\"0x%016" PRIx64 "\",", state.mcause);
+  fprintf(stdout, "\"minstret\":\"0x%016" PRIx64 "\",", state.minstret);
+  fprintf(stdout, "\"mie\":\"0x%016" PRIx64 "\",", state.mie);
+  fprintf(stdout, "\"mip\":\"0x%016" PRIx64 "\",", state.mip);
+  fprintf(stdout, "\"medeleg\":\"0x%016" PRIx64 "\",", state.medeleg);
+  fprintf(stdout, "\"mideleg\":\"0x%016" PRIx64 "\",", state.mideleg);
+  fprintf(stdout, "\"mideleg\":\"0x%016" PRIx64 "\",", state.mideleg);
+  fprintf(stdout, "\"mcounteren\":\"0x%016" PRIx64 "\",", state.mcounteren);
+  fprintf(stdout, "\"scounteren\":\"0x%016" PRIx64 "\",", state.scounteren);
+  fprintf(stdout, "\"sepc\":\"0x%016" PRIx64 "\",", state.sepc);
+  fprintf(stdout, "\"stval\":\"0x%016" PRIx64 "\",", state.stval);
+  fprintf(stdout, "\"sscratch\":\"0x%016" PRIx64 "\",", state.sscratch);
+  fprintf(stdout, "\"stvec\":\"0x%016" PRIx64 "\",", state.stvec);
+  fprintf(stdout, "\"satp\":\"0x%016" PRIx64 "\",", state.satp);
+  fprintf(stdout, "\"scause\":\"0x%016" PRIx64 "\",", state.scause);
+  fprintf(stdout, "\"dpc\":\"0x%016" PRIx64 "\",", state.dpc);
+  fprintf(stdout, "\"dscratch\":\"0x%016" PRIx64 "\",", state.dscratch);
+
+  fprintf(stdout, "\"xregs\":[");
+  for (int reg_i = 0; reg_i < NXPR; reg_i++) {
+    if (reg_i != 0)
+      fprintf(stdout, ",");
+    fprintf(stdout, "\"0x%016" PRIx64 "\"", state.XPR[reg_i]);
+  }
+  fprintf(stdout, "],");
+
+  fprintf(stdout, "\"fregs\":[");
+  for (int reg_i = 0; reg_i < NFPR; reg_i++) {
+    if (reg_i != 0)
+      fprintf(stdout, ",");
+    fprintf(stdout, "\"0x%016" PRIx64 "\"", state.FPR[reg_i]);
+  }
+  fprintf(stdout, "]}");
+
+}
+
 // fetch/decode/execute loop
 void processor_t::step(size_t n)
 {
@@ -114,9 +163,11 @@ void processor_t::step(size_t n)
          default: abort(); \
        } \
        pc = state.pc; \
+       print_state(); \
        break; \
      } else { \
        state.pc = pc; \
+       print_state(); \
        instret++; \
      }
 
@@ -124,9 +175,11 @@ void processor_t::step(size_t n)
     {
       take_pending_interrupt();
 
-      if (unlikely(slow_path()))
+      // if (unlikely(slow_path()))
+      if (1)
       {
         while (instret < n)
+
         {
           if (unlikely(!state.serialized && state.single_step == state.STEP_STEPPED)) {
             state.single_step = state.STEP_NONE;
@@ -144,8 +197,15 @@ void processor_t::step(size_t n)
           insn_fetch_t fetch = mmu->load_insn(pc);
           if (debug && !state.serialized)
             disasm(fetch.insn);
-          pc = execute_insn(this, pc, fetch);
 
+          insn_t insn = fetch.insn;
+          uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
+
+          fprintf(stdout, "\n{\"kind\":\"insn\",\"core\":%d,\"pc\":\"0x%016" PRIx64 "\",\"bits\":\"0x%08" PRIx64 "\",\"desc\":\"%s\"}",
+            id, state.pc, bits, disassembler->disassemble(insn).c_str());
+
+          pc = execute_insn(this, pc, fetch);
+          
           advance_pc();
 
           if (unlikely(state.pc >= DEBUG_ROM_ENTRY &&
@@ -211,6 +271,8 @@ void processor_t::step(size_t n)
       take_trap(t, pc);
       n = instret;
 
+      print_state();
+
       if (unlikely(state.single_step == state.STEP_STEPPED)) {
         state.single_step = state.STEP_NONE;
         enter_debug_mode(DCSR_CAUSE_STEP);
@@ -218,6 +280,8 @@ void processor_t::step(size_t n)
     }
     catch (trigger_matched_t& t)
     {
+      fprintf(stderr, "\n\nCaught trigger_matched_t\n\n");
+
       if (mmu->matched_trigger) {
         // This exception came from the MMU. That means the instruction hasn't
         // fully executed yet. We start it again, but this time it won't throw

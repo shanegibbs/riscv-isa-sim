@@ -311,8 +311,15 @@ void processor_t::disasm(insn_t insn)
       fprintf(stderr, "core %3d: Executed %" PRIx64 " times\n", id, executions);
     }
 
-    fprintf(stderr, "core %3d: 0x%016" PRIx64 " (0x%08" PRIx64 ") %s\n",
-            id, state.pc, bits, disassembler->disassemble(insn).c_str());
+    // fprintf(stderr, "Bits 0x%016lx\n", bits);
+    // fprintf(stderr, "Insn 0x%016lx\n", insn);
+
+    // fprintf(stderr, "core %3d: 0x%016" PRIx64 " (0x%08" PRIx64 ") %s\n",
+    //         id, state.pc, bits, disassembler->disassemble(insn).c_str());
+
+    // fprintf(stderr, "{\"core\":%d,\"priv\":%d,\"pc\":\"0x%016" PRIx64 "\",\"bits\":\"0x%08" PRIx64 "\",\"desc\":\"%s\"}\n",
+            // id, state.prv, state.pc, bits, disassembler->disassemble(insn).c_str());
+
     last_pc = state.pc;
     last_bits = bits;
     executions = 1;
@@ -329,6 +336,10 @@ int processor_t::paddr_bits()
 
 void processor_t::set_csr(int which, reg_t val)
 {
+// #ifdef RISCV_ENABLE_COMMITLOG
+  // fprintf(stderr, ",\"csr\":{\"kind\":\"set\",\"addr\":\"%d\",\"value\":\"0x%016" PRIx64 "\"}", which, val);
+// #endif
+
   val = zext_xlen(val);
   reg_t delegable_ints = MIP_SSIP | MIP_STIP | MIP_SEIP
                        | ((ext != NULL) << IRQ_COP);

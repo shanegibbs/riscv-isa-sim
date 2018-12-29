@@ -78,6 +78,8 @@ void sim_t::main()
 {
   if (!debug && log)
     set_procs_debug(true);
+  
+  procs[current_proc]->print_state();
 
   while (!done())
   {

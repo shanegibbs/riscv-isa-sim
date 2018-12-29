@@ -81,6 +81,11 @@ public:
   // template for functions that load an aligned value from memory
   #define load_func(type) \
     inline type##_t load_##type(reg_t addr) { \
+      type##_t m = real_load_##type(addr); \
+      fprintf(stdout, "\n{\"kind\":\"load\",\"type\":\""#type"\",\"addr\":\"0x%016x\",\"value\":\"0x%016x\"}", addr, m); \
+      return m; \
+    } \
+    inline type##_t real_load_##type(reg_t addr) { \
       if (unlikely(addr & (sizeof(type##_t)-1))) \
         return misaligned_load(addr, sizeof(type##_t)); \
       reg_t vpn = addr >> PGSHIFT; \
