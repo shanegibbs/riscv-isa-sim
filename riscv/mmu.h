@@ -82,7 +82,7 @@ public:
   #define load_func(type) \
     inline type##_t load_##type(reg_t addr) { \
       type##_t m = real_load_##type(addr); \
-      fprintf(stdout, "\n{\"kind\":\"load\",\"type\":\""#type"\",\"addr\":\"0x%016x\",\"value\":\"0x%016x\"}", addr, m); \
+      fprintf(json_log_fd, "\n{\"kind\":\"load\",\"type\":\""#type"\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr, m); \
       return m; \
     } \
     inline type##_t real_load_##type(reg_t addr) { \

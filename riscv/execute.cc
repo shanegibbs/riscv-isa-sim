@@ -90,50 +90,50 @@ bool processor_t::slow_path()
 
 void processor_t::print_state()
 {
-  fprintf(stdout, "\n{\"kind\":\"state\",");
-  fprintf(stdout, "\"id\":%d,", id);
-  fprintf(stdout, "\"pc\":\"0x%016" PRIx64 "\",", state.pc);
-  fprintf(stdout, "\"prv\":\"0x%016" PRIx64 "\",", state.prv);
-  fprintf(stdout, "\"minstret\":\"0x%016" PRIx64 "\",", state.minstret);
-  fprintf(stdout, "\"misa\":\"0x%016" PRIx64 "\",", state.misa);
-  fprintf(stdout, "\"mstatus\":\"0x%016" PRIx64 "\",", state.mstatus);
-  fprintf(stdout, "\"mepc\":\"0x%016" PRIx64 "\",", state.mepc);
-  fprintf(stdout, "\"mtval\":\"0x%016" PRIx64 "\",", state.mtval);
-  fprintf(stdout, "\"mscratch\":\"0x%016" PRIx64 "\",", state.mscratch);
-  fprintf(stdout, "\"mtvec\":\"0x%016" PRIx64 "\",", state.mtvec);
-  fprintf(stdout, "\"mcause\":\"0x%016" PRIx64 "\",", state.mcause);
-  fprintf(stdout, "\"minstret\":\"0x%016" PRIx64 "\",", state.minstret);
-  fprintf(stdout, "\"mie\":\"0x%016" PRIx64 "\",", state.mie);
-  fprintf(stdout, "\"mip\":\"0x%016" PRIx64 "\",", state.mip);
-  fprintf(stdout, "\"medeleg\":\"0x%016" PRIx64 "\",", state.medeleg);
-  fprintf(stdout, "\"mideleg\":\"0x%016" PRIx64 "\",", state.mideleg);
-  fprintf(stdout, "\"mideleg\":\"0x%016" PRIx64 "\",", state.mideleg);
-  fprintf(stdout, "\"mcounteren\":\"0x%016" PRIx64 "\",", state.mcounteren);
-  fprintf(stdout, "\"scounteren\":\"0x%016" PRIx64 "\",", state.scounteren);
-  fprintf(stdout, "\"sepc\":\"0x%016" PRIx64 "\",", state.sepc);
-  fprintf(stdout, "\"stval\":\"0x%016" PRIx64 "\",", state.stval);
-  fprintf(stdout, "\"sscratch\":\"0x%016" PRIx64 "\",", state.sscratch);
-  fprintf(stdout, "\"stvec\":\"0x%016" PRIx64 "\",", state.stvec);
-  fprintf(stdout, "\"satp\":\"0x%016" PRIx64 "\",", state.satp);
-  fprintf(stdout, "\"scause\":\"0x%016" PRIx64 "\",", state.scause);
-  fprintf(stdout, "\"dpc\":\"0x%016" PRIx64 "\",", state.dpc);
-  fprintf(stdout, "\"dscratch\":\"0x%016" PRIx64 "\",", state.dscratch);
+  fprintf(json_log_fd, "\n{\"kind\":\"state\",");
+  fprintf(json_log_fd, "\"id\":%d,", id);
+  fprintf(json_log_fd, "\"pc\":\"0x%016" PRIx64 "\",", state.pc);
+  fprintf(json_log_fd, "\"prv\":\"0x%016" PRIx64 "\",", state.prv);
+  fprintf(json_log_fd, "\"minstret\":\"0x%016" PRIx64 "\",", state.minstret);
+  fprintf(json_log_fd, "\"misa\":\"0x%016" PRIx64 "\",", state.misa);
+  fprintf(json_log_fd, "\"mstatus\":\"0x%016" PRIx64 "\",", state.mstatus);
+  fprintf(json_log_fd, "\"mepc\":\"0x%016" PRIx64 "\",", state.mepc);
+  fprintf(json_log_fd, "\"mtval\":\"0x%016" PRIx64 "\",", state.mtval);
+  fprintf(json_log_fd, "\"mscratch\":\"0x%016" PRIx64 "\",", state.mscratch);
+  fprintf(json_log_fd, "\"mtvec\":\"0x%016" PRIx64 "\",", state.mtvec);
+  fprintf(json_log_fd, "\"mcause\":\"0x%016" PRIx64 "\",", state.mcause);
+  fprintf(json_log_fd, "\"minstret\":\"0x%016" PRIx64 "\",", state.minstret);
+  fprintf(json_log_fd, "\"mie\":\"0x%016" PRIx64 "\",", state.mie);
+  fprintf(json_log_fd, "\"mip\":\"0x%016" PRIx64 "\",", state.mip);
+  fprintf(json_log_fd, "\"medeleg\":\"0x%016" PRIx64 "\",", state.medeleg);
+  fprintf(json_log_fd, "\"mideleg\":\"0x%016" PRIx64 "\",", state.mideleg);
+  fprintf(json_log_fd, "\"mideleg\":\"0x%016" PRIx64 "\",", state.mideleg);
+  fprintf(json_log_fd, "\"mcounteren\":\"0x%016" PRIx64 "\",", state.mcounteren);
+  fprintf(json_log_fd, "\"scounteren\":\"0x%016" PRIx64 "\",", state.scounteren);
+  fprintf(json_log_fd, "\"sepc\":\"0x%016" PRIx64 "\",", state.sepc);
+  fprintf(json_log_fd, "\"stval\":\"0x%016" PRIx64 "\",", state.stval);
+  fprintf(json_log_fd, "\"sscratch\":\"0x%016" PRIx64 "\",", state.sscratch);
+  fprintf(json_log_fd, "\"stvec\":\"0x%016" PRIx64 "\",", state.stvec);
+  fprintf(json_log_fd, "\"satp\":\"0x%016" PRIx64 "\",", state.satp);
+  fprintf(json_log_fd, "\"scause\":\"0x%016" PRIx64 "\",", state.scause);
+  fprintf(json_log_fd, "\"dpc\":\"0x%016" PRIx64 "\",", state.dpc);
+  fprintf(json_log_fd, "\"dscratch\":\"0x%016" PRIx64 "\",", state.dscratch);
 
-  fprintf(stdout, "\"xregs\":[");
+  fprintf(json_log_fd, "\"xregs\":[");
   for (int reg_i = 0; reg_i < NXPR; reg_i++) {
     if (reg_i != 0)
-      fprintf(stdout, ",");
-    fprintf(stdout, "\"0x%016" PRIx64 "\"", state.XPR[reg_i]);
+      fprintf(json_log_fd, ",");
+    fprintf(json_log_fd, "\"0x%016" PRIx64 "\"", state.XPR[reg_i]);
   }
-  fprintf(stdout, "],");
+  fprintf(json_log_fd, "],");
 
-  fprintf(stdout, "\"fregs\":[");
+  fprintf(json_log_fd, "\"fregs\":[");
   for (int reg_i = 0; reg_i < NFPR; reg_i++) {
     if (reg_i != 0)
-      fprintf(stdout, ",");
-    fprintf(stdout, "\"0x%016" PRIx64 "\"", state.FPR[reg_i]);
+      fprintf(json_log_fd, ",");
+    fprintf(json_log_fd, "\"0x%016" PRIx64 "\"", state.FPR[reg_i]);
   }
-  fprintf(stdout, "]}");
+  fprintf(json_log_fd, "]}");
 
 }
 
@@ -201,7 +201,7 @@ void processor_t::step(size_t n)
           insn_t insn = fetch.insn;
           uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
 
-          fprintf(stdout, "\n{\"kind\":\"insn\",\"core\":%d,\"pc\":\"0x%016" PRIx64 "\",\"bits\":\"0x%08" PRIx64 "\",\"desc\":\"%s\"}",
+          fprintf(json_log_fd, "\n{\"kind\":\"insn\",\"core\":%d,\"pc\":\"0x%016" PRIx64 "\",\"bits\":\"0x%08" PRIx64 "\",\"desc\":\"%s\"}",
             id, state.pc, bits, disassembler->disassemble(insn).c_str());
 
           pc = execute_insn(this, pc, fetch);

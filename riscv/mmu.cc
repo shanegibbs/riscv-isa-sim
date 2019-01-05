@@ -4,6 +4,8 @@
 #include "simif.h"
 #include "processor.h"
 
+FILE *json_log_fd = 0;
+
 mmu_t::mmu_t(simif_t* sim, processor_t* proc)
  : sim(sim), proc(proc),
   check_triggers_fetch(false),
