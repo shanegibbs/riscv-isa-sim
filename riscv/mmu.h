@@ -82,7 +82,7 @@ public:
   #define load_func(type) \
     inline type##_t load_##type(reg_t addr) { \
       type##_t m = real_load_##type(addr); \
-      fprintf(json_log_fd, "\n{\"kind\":\"load\",\"type\":\""#type"\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr, m); \
+      if (running) fprintf(json_log_fd, "\n{\"kind\":\"load\",\"type\":\""#type"\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr, m); \
       return m; \
     } \
     inline type##_t real_load_##type(reg_t addr) { \
@@ -120,6 +120,7 @@ public:
   // template for functions that store an aligned value to memory
   #define store_func(type) \
     void store_##type(reg_t addr, type##_t val) { \
+      if (running) fprintf(json_log_fd, "\n{\"kind\":\"store\",\"type\":\""#type"\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr, val); \
       if (unlikely(addr & (sizeof(type##_t)-1))) \
         return misaligned_store(addr, val, sizeof(type##_t)); \
       reg_t vpn = addr >> PGSHIFT; \

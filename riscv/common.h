@@ -5,6 +5,7 @@
 
 #include <cstdio>
 
+extern bool running;
 extern FILE *json_log_fd;
 
 #define   likely(x) __builtin_expect(x, 1)

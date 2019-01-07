@@ -76,6 +76,8 @@ void sim_thread_main(void* arg)
 
 void sim_t::main()
 {
+  running = true;
+
   if (!debug && log)
     set_procs_debug(true);
   

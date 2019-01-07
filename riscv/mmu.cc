@@ -4,6 +4,7 @@
 #include "simif.h"
 #include "processor.h"
 
+bool running = false;
 FILE *json_log_fd = 0;
 
 mmu_t::mmu_t(simif_t* sim, processor_t* proc)

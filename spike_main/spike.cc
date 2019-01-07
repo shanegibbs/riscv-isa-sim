@@ -78,7 +78,6 @@ static std::vector<std::pair<reg_t, mem_t*>> make_mems(const char* arg)
 
 int main(int argc, char** argv)
 {
-
   json_log_fd = fopen("log.json", "w+");
   if(json_log_fd < 0)
     return 1;
