@@ -82,7 +82,12 @@ public:
   #define load_func(type) \
     inline type##_t load_##type(reg_t addr) { \
       type##_t m = real_load_##type(addr); \
-      if (running) fprintf(json_log_fd, "\n{\"kind\":\"load\",\"type\":\""#type"\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr, m); \
+      if (running) { \
+        pthread_mutex_lock(json_log_fd_lock); \
+        fprintf(json_log_fd, "\n{\"kind\":\"load\",\"type\":\""#type"\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr, m); \
+        fflush(json_log_fd); \
+        pthread_mutex_unlock(json_log_fd_lock); \
+      } \
       return m; \
     } \
     inline type##_t real_load_##type(reg_t addr) { \
@@ -120,7 +125,12 @@ public:
   // template for functions that store an aligned value to memory
   #define store_func(type) \
     void store_##type(reg_t addr, type##_t val) { \
-      if (running) fprintf(json_log_fd, "\n{\"kind\":\"store\",\"type\":\""#type"\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr, val); \
+      if (running) { \
+        pthread_mutex_lock(json_log_fd_lock); \
+        fprintf(json_log_fd, "\n{\"kind\":\"store\",\"type\":\""#type"\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr, val); \
+        fflush(json_log_fd); \
+        pthread_mutex_unlock(json_log_fd_lock); \
+      } \
       if (unlikely(addr & (sizeof(type##_t)-1))) \
         return misaligned_store(addr, val, sizeof(type##_t)); \
       reg_t vpn = addr >> PGSHIFT; \

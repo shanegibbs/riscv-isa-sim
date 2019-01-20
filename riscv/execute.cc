@@ -90,56 +90,68 @@ bool processor_t::slow_path()
 
 void processor_t::print_state()
 {
+  pthread_mutex_lock(json_log_fd_lock);
+  fprintf(json_log_fd, "\n{\"kind\":\"mark\"}");
   fprintf(json_log_fd, "\n{\"kind\":\"state\",");
   fprintf(json_log_fd, "\"id\":%d,", id);
-  fprintf(json_log_fd, "\"pc\":\"0x%016" PRIx64 "\",", state.pc);
-  fprintf(json_log_fd, "\"prv\":\"0x%016" PRIx64 "\",", state.prv);
-  fprintf(json_log_fd, "\"minstret\":\"0x%016" PRIx64 "\",", state.minstret);
-  fprintf(json_log_fd, "\"misa\":\"0x%016" PRIx64 "\",", state.misa);
-  fprintf(json_log_fd, "\"mstatus\":\"0x%016" PRIx64 "\",", state.mstatus);
-  fprintf(json_log_fd, "\"mepc\":\"0x%016" PRIx64 "\",", state.mepc);
-  fprintf(json_log_fd, "\"mtval\":\"0x%016" PRIx64 "\",", state.mtval);
-  fprintf(json_log_fd, "\"mscratch\":\"0x%016" PRIx64 "\",", state.mscratch);
-  fprintf(json_log_fd, "\"mtvec\":\"0x%016" PRIx64 "\",", state.mtvec);
-  fprintf(json_log_fd, "\"mcause\":\"0x%016" PRIx64 "\",", state.mcause);
-  fprintf(json_log_fd, "\"minstret\":\"0x%016" PRIx64 "\",", state.minstret);
-  fprintf(json_log_fd, "\"mie\":\"0x%016" PRIx64 "\",", state.mie);
-  fprintf(json_log_fd, "\"mip\":\"0x%016" PRIx64 "\",", state.mip);
-  fprintf(json_log_fd, "\"medeleg\":\"0x%016" PRIx64 "\",", state.medeleg);
-  fprintf(json_log_fd, "\"mideleg\":\"0x%016" PRIx64 "\",", state.mideleg);
-  fprintf(json_log_fd, "\"mideleg\":\"0x%016" PRIx64 "\",", state.mideleg);
-  fprintf(json_log_fd, "\"mcounteren\":\"0x%016" PRIx64 "\",", state.mcounteren);
-  fprintf(json_log_fd, "\"scounteren\":\"0x%016" PRIx64 "\",", state.scounteren);
-  fprintf(json_log_fd, "\"sepc\":\"0x%016" PRIx64 "\",", state.sepc);
-  fprintf(json_log_fd, "\"stval\":\"0x%016" PRIx64 "\",", state.stval);
-  fprintf(json_log_fd, "\"sscratch\":\"0x%016" PRIx64 "\",", state.sscratch);
-  fprintf(json_log_fd, "\"stvec\":\"0x%016" PRIx64 "\",", state.stvec);
-  fprintf(json_log_fd, "\"satp\":\"0x%016" PRIx64 "\",", state.satp);
-  fprintf(json_log_fd, "\"scause\":\"0x%016" PRIx64 "\",", state.scause);
-  fprintf(json_log_fd, "\"dpc\":\"0x%016" PRIx64 "\",", state.dpc);
-  fprintf(json_log_fd, "\"dscratch\":\"0x%016" PRIx64 "\",", state.dscratch);
+
+  fprintf(json_log_fd, "\"pc\":\"0x%" PRIx64 "\",", state.pc);
+  fprintf(json_log_fd, "\"prv\":\"0x%" PRIx64 "\",", state.prv);
+  fprintf(json_log_fd, "\"misa\":\"0x%" PRIx64 "\",", state.misa);
+  fprintf(json_log_fd, "\"mstatus\":\"0x%" PRIx64 "\",", state.mstatus);
+  fprintf(json_log_fd, "\"mepc\":\"0x%" PRIx64 "\",", state.mepc);
+  fprintf(json_log_fd, "\"mtval\":\"0x%" PRIx64 "\",", state.mtval);
+  fprintf(json_log_fd, "\"mscratch\":\"0x%" PRIx64 "\",", state.mscratch);
+  fprintf(json_log_fd, "\"mtvec\":\"0x%" PRIx64 "\",", state.mtvec);
+  fprintf(json_log_fd, "\"mcause\":\"0x%" PRIx64 "\",", state.mcause);
+  fprintf(json_log_fd, "\"minstret\":\"0x%" PRIx64 "\",", state.minstret);
+  fprintf(json_log_fd, "\"mie\":\"0x%" PRIx64 "\",", state.mie);
+  fprintf(json_log_fd, "\"mip\":\"0x%" PRIx64 "\",", state.mip);
+  fprintf(json_log_fd, "\"medeleg\":\"0x%" PRIx64 "\",", state.medeleg);
+  fprintf(json_log_fd, "\"mideleg\":\"0x%" PRIx64 "\",", state.mideleg);
+  fprintf(json_log_fd, "\"mcounteren\":\"0x%" PRIx64 "\",", state.mcounteren);
+  fprintf(json_log_fd, "\"scounteren\":\"0x%" PRIx64 "\",", state.scounteren);
+  fprintf(json_log_fd, "\"sepc\":\"0x%" PRIx64 "\",", state.sepc);
+  fprintf(json_log_fd, "\"stval\":\"0x%" PRIx64 "\",", state.stval);
+  fprintf(json_log_fd, "\"sscratch\":\"0x%" PRIx64 "\",", state.sscratch);
+  fprintf(json_log_fd, "\"stvec\":\"0x%" PRIx64 "\",", state.stvec);
+  fprintf(json_log_fd, "\"satp\":\"0x%" PRIx64 "\",", state.satp);
+  fprintf(json_log_fd, "\"scause\":\"0x%" PRIx64 "\",", state.scause);
 
   fprintf(json_log_fd, "\"xregs\":[");
   for (int reg_i = 0; reg_i < NXPR; reg_i++) {
     if (reg_i != 0)
       fprintf(json_log_fd, ",");
-    fprintf(json_log_fd, "\"0x%016" PRIx64 "\"", state.XPR[reg_i]);
-  }
-  fprintf(json_log_fd, "],");
-
-  fprintf(json_log_fd, "\"fregs\":[");
-  for (int reg_i = 0; reg_i < NFPR; reg_i++) {
-    if (reg_i != 0)
-      fprintf(json_log_fd, ",");
-    fprintf(json_log_fd, "\"0x%016" PRIx64 "\"", state.FPR[reg_i]);
+    fprintf(json_log_fd, "\"0x%" PRIx64 "\"", state.XPR[reg_i]);
   }
   fprintf(json_log_fd, "]}");
 
+  // fprintf(json_log_fd, "\"fregs\":[");
+  // for (int reg_i = 0; reg_i < NFPR; reg_i++) {
+  //   if (reg_i != 0)
+  //     fprintf(json_log_fd, ",");
+  //   fprintf(json_log_fd, "\"0x%016" PRIx64 "\"", state.FPR[reg_i]);
+  // }
+  // fprintf(json_log_fd, "]}");
+
+  fflush(json_log_fd);
+  pthread_mutex_unlock(json_log_fd_lock);
+
+  get_mmu()->flush_tlb();
 }
 
 // fetch/decode/execute loop
 void processor_t::step(size_t n)
 {
+  if (state.pc == 0xffffffe0003c3bf4) {
+    throw "endod";
+  }
+
+  print_state();
+
+  n = 1;
+  mmu->flush_tlb();
+
   if (state.dcsr.cause == DCSR_CAUSE_NONE) {
     if (halt_request) {
       enter_debug_mode(DCSR_CAUSE_DEBUGINT);
@@ -163,11 +175,9 @@ void processor_t::step(size_t n)
          default: abort(); \
        } \
        pc = state.pc; \
-       print_state(); \
        break; \
      } else { \
        state.pc = pc; \
-       print_state(); \
        instret++; \
      }
 
@@ -201,8 +211,11 @@ void processor_t::step(size_t n)
           insn_t insn = fetch.insn;
           uint64_t bits = insn.bits() & ((1ULL << (8 * insn_length(insn.bits()))) - 1);
 
-          fprintf(json_log_fd, "\n{\"kind\":\"insn\",\"core\":%d,\"pc\":\"0x%016" PRIx64 "\",\"bits\":\"0x%08" PRIx64 "\",\"desc\":\"%s\"}",
+          pthread_mutex_lock(json_log_fd_lock);
+          fprintf(json_log_fd, "\n{\"kind\":\"insn\",\"core\":%d,\"pc\":\"0x%" PRIx64 "\",\"bits\":\"0x%08" PRIx64 "\",\"desc\":\"%s\"}",
             id, state.pc, bits, disassembler->disassemble(insn).c_str());
+          fflush(json_log_fd);
+          pthread_mutex_unlock(json_log_fd_lock);
 
           pc = execute_insn(this, pc, fetch);
           
@@ -271,8 +284,6 @@ void processor_t::step(size_t n)
       take_trap(t, pc);
       n = instret;
 
-      print_state();
-
       if (unlikely(state.single_step == state.STEP_STEPPED)) {
         state.single_step = state.STEP_NONE;
         enter_debug_mode(DCSR_CAUSE_STEP);
@@ -312,4 +323,5 @@ void processor_t::step(size_t n)
     state.minstret += instret;
     n -= instret;
   }
+
 }

@@ -311,15 +311,15 @@ void processor_t::disasm(insn_t insn)
       fprintf(stderr, "core %3d: Executed %" PRIx64 " times\n", id, executions);
     }
 
-    // fprintf(stderr, "Bits 0x%016lx\n", bits);
-    // fprintf(stderr, "Insn 0x%016lx\n", insn);
+    fprintf(stderr, "Bits 0x%016lx\n", bits);
+    fprintf(stderr, "Insn 0x%016lx\n", insn);
 
-    // fprintf(stderr, "core %3d: 0x%016" PRIx64 " (0x%08" PRIx64 ") %s\n",
-    //         id, state.pc, bits, disassembler->disassemble(insn).c_str());
+    fprintf(stderr, "core %3d: 0x%016" PRIx64 " (0x%08" PRIx64 ") %s\n",
+            id, state.pc, bits, disassembler->disassemble(insn).c_str());
 
-    // fprintf(stderr, "{\"core\":%d,\"priv\":%d,\"pc\":\"0x%016" PRIx64 "\",\"bits\":\"0x%08" PRIx64 "\",\"desc\":\"%s\"}\n",
-            // id, state.prv, state.pc, bits, disassembler->disassemble(insn).c_str());
-
+    fprintf(stderr, "{\"core\":%d,\"priv\":%d,\"pc\":\"0x%016" PRIx64 "\",\"bits\":\"0x%08" PRIx64 "\",\"desc\":\"%s\"}\n",
+            id, state.prv, state.pc, bits, disassembler->disassemble(insn).c_str());
+    
     last_pc = state.pc;
     last_bits = bits;
     executions = 1;

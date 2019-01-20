@@ -197,8 +197,21 @@ void sim_t::make_dtb()
 char* sim_t::addr_to_mem(reg_t addr) {
   auto desc = bus.find_device(addr);
   if (auto mem = dynamic_cast<mem_t*>(desc.second))
-    if (addr - desc.first < mem->size())
-      return mem->contents() + (addr - desc.first);
+    if (addr - desc.first < mem->size()) {
+      auto v = mem->contents() + (addr - desc.first);
+      pthread_mutex_lock(json_log_fd_lock);
+      fprintf(json_log_fd, "\n{\"kind\":\"mem\",\"type\":\"read\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr, *v & 0xff);
+      fprintf(json_log_fd, "\n{\"kind\":\"mem\",\"type\":\"read\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr + 1, *(v+1) & 0xff);
+      fprintf(json_log_fd, "\n{\"kind\":\"mem\",\"type\":\"read\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr + 2, *(v+2) & 0xff);
+      fprintf(json_log_fd, "\n{\"kind\":\"mem\",\"type\":\"read\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr + 3, *(v+3) & 0xff);
+      fprintf(json_log_fd, "\n{\"kind\":\"mem\",\"type\":\"read\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr + 4, *(v+4) & 0xff);
+      fprintf(json_log_fd, "\n{\"kind\":\"mem\",\"type\":\"read\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr + 5, *(v+5) & 0xff);
+      fprintf(json_log_fd, "\n{\"kind\":\"mem\",\"type\":\"read\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr + 6, *(v+6) & 0xff);
+      fprintf(json_log_fd, "\n{\"kind\":\"mem\",\"type\":\"read\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr + 7, *(v+7) & 0xff);
+      fflush(json_log_fd);
+      pthread_mutex_unlock(json_log_fd_lock);
+      return v;
+    }
   return NULL;
 }
 
