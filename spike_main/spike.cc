@@ -13,6 +13,7 @@
 #include <string>
 #include <memory>
 #include <fcntl.h>
+#include <unistd.h>
 
 static void help()
 {
@@ -78,10 +79,6 @@ static std::vector<std::pair<reg_t, mem_t*>> make_mems(const char* arg)
 
 int main(int argc, char** argv)
 {
-  json_log_fd = fopen("log.json", "w+");
-  if(json_log_fd < 0)
-    return 1;
-
   bool debug = false;
   bool halted = false;
   bool histogram = false;
@@ -115,9 +112,13 @@ int main(int argc, char** argv)
     }
   };
 
+  const char *json_log = "log.json";
+
   option_parser_t parser;
   parser.help(&help);
   parser.option('h', 0, 0, [&](const char* s){help();});
+  parser.option('f', 0, 1, [&](const char* s){json_log = s;});
+  parser.option('c', 0, 1, [&](const char* s){max_insn_count = atoi(s);});
   parser.option('d', 0, 0, [&](const char* s){debug = true;});
   parser.option('g', 0, 0, [&](const char* s){histogram = true;});
   parser.option('l', 0, 0, [&](const char* s){log = true;});
@@ -183,5 +184,19 @@ int main(int argc, char** argv)
   s.set_debug(debug);
   s.set_log(log);
   s.set_histogram(histogram);
+
+  // save stdout
+  int saved = dup(1);
+
+  // send stdout to stderr
+  dup2(2, 1);
+
+  // write json logs to saved stdout
+  json_log_fd = fdopen(saved, "w");
+
+  // json_log_fd = fopen(json_log, "w+");
+  if (json_log_fd < 0)
+    return 1;
+
   return s.run();
 }

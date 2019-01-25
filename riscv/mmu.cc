@@ -5,6 +5,7 @@
 #include "processor.h"
 
 bool running = false;
+unsigned int max_insn_count = 0;
 pthread_mutex_t *json_log_fd_lock = new pthread_mutex_t;
 FILE *json_log_fd = 0;
 

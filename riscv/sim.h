@@ -104,8 +104,8 @@ private:
   friend void sim_thread_main(void*);
   void main();
 
-  context_t* host;
-  context_t target;
+  // context_t* host;
+  // context_t target;
   void reset();
   void idle();
   void read_chunk(addr_t taddr, size_t len, void* dst);

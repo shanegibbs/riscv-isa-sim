@@ -143,10 +143,6 @@ void processor_t::print_state()
 // fetch/decode/execute loop
 void processor_t::step(size_t n)
 {
-  if (state.pc == 0xffffffe0003c3bf4) {
-    throw "endod";
-  }
-
   print_state();
 
   n = 1;

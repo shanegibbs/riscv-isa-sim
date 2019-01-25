@@ -69,13 +69,14 @@ sim_t::~sim_t()
   delete debug_mmu;
 }
 
-void sim_thread_main(void* arg)
-{
-  ((sim_t*)arg)->main();
-}
+void sim_thread_main(void* arg) {}
 
-void sim_t::main()
+void sim_t::main() {}
+
+int sim_t::run()
 {
+  run_pre();
+
   running = true;
 
   if (!debug && log)
@@ -83,8 +84,23 @@ void sim_t::main()
   
   procs[current_proc]->print_state();
 
+  unsigned int count = 0;
+
+  run_step();
+
   while (!done())
   {
+    if (max_insn_count > 0 && count > max_insn_count) {
+      exit(0);
+    }
+    count++;
+
+    if (run_running()) {
+      run_step();
+    } else {
+      return run_post();
+    }
+
     if (debug || ctrlc_pressed)
       interactive();
     else
@@ -93,13 +109,7 @@ void sim_t::main()
       remote_bitbang->tick();
     }
   }
-}
 
-int sim_t::run()
-{
-  host = context_t::current();
-  target.init(sim_thread_main, this);
-  return htif_t::run();
 }
 
 void sim_t::step(size_t n)
@@ -119,7 +129,7 @@ void sim_t::step(size_t n)
         clint->increment(INTERLEAVE / INSNS_PER_RTC_TICK);
       }
 
-      host->switch_to();
+      // host->switch_to();
     }
   }
 }
@@ -223,10 +233,7 @@ void sim_t::reset()
     make_dtb();
 }
 
-void sim_t::idle()
-{
-  target.switch_to();
-}
+void sim_t::idle() {}
 
 void sim_t::read_chunk(addr_t taddr, size_t len, void* dst)
 {
