@@ -48,6 +48,13 @@ class trigger_matched_t
     reg_t data;
 };
 
+struct __attribute__((__packed__)) bincode_mem {
+  unsigned int enum_idx;
+  unsigned int mem_enum_idx;
+  unsigned long long addr;
+  unsigned long long value;
+};
+
 // this class implements a processor's port into the virtual memory system.
 // an MMU and instruction cache are maintained for simulator performance.
 class mmu_t
@@ -79,12 +86,17 @@ public:
   }
 
   // template for functions that load an aligned value from memory
-  #define load_func(type) \
+  #define load_func(type, load_enum_idx) \
     inline type##_t load_##type(reg_t addr) { \
       type##_t m = real_load_##type(addr); \
       if (running) { \
+        struct bincode_mem data; \
+        data.enum_idx = 3; \
+        data.mem_enum_idx = load_enum_idx; \
+        data.addr = addr; \
+        data.value = m; \
         pthread_mutex_lock(json_log_fd_lock); \
-        fprintf(json_log_fd, "\n{\"kind\":\"load\",\"type\":\""#type"\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr, m); \
+        fwrite(&data, sizeof(data), 1, json_log_fd); \
         fflush(json_log_fd); \
         pthread_mutex_unlock(json_log_fd_lock); \
       } \
@@ -111,23 +123,28 @@ public:
     }
 
   // load value from memory at aligned address; zero extend to register width
-  load_func(uint8)
-  load_func(uint16)
-  load_func(uint32)
-  load_func(uint64)
+  load_func(uint8, 0)
+  load_func(uint16, 1)
+  load_func(uint32, 2)
+  load_func(uint64, 3)
 
   // load value from memory at aligned address; sign extend to register width
-  load_func(int8)
-  load_func(int16)
-  load_func(int32)
-  load_func(int64)
+  load_func(int8, 4)
+  load_func(int16, 5)
+  load_func(int32, 6)
+  load_func(int64, 7)
 
   // template for functions that store an aligned value to memory
-  #define store_func(type) \
+  #define store_func(type, store_enum_idx) \
     void store_##type(reg_t addr, type##_t val) { \
       if (running) { \
+        struct bincode_mem data; \
+        data.enum_idx = 4; \
+        data.mem_enum_idx = store_enum_idx; \
+        data.addr = addr; \
+        data.value = val; \
         pthread_mutex_lock(json_log_fd_lock); \
-        fprintf(json_log_fd, "\n{\"kind\":\"store\",\"type\":\""#type"\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr, val); \
+        fwrite(&data, sizeof(data), 1, json_log_fd); \
         fflush(json_log_fd); \
         pthread_mutex_unlock(json_log_fd_lock); \
       } \
@@ -187,10 +204,10 @@ public:
   }
 
   // store value to memory at aligned address
-  store_func(uint8)
-  store_func(uint16)
-  store_func(uint32)
-  store_func(uint64)
+  store_func(uint8, 0)
+  store_func(uint16, 1)
+  store_func(uint32, 2)
+  store_func(uint64, 3)
 
   // perform an atomic memory operation at an aligned address
   amo_func(uint32)

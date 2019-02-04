@@ -123,7 +123,7 @@ void sim_t::step(size_t n)
     if (current_step == INTERLEAVE)
     {
       current_step = 0;
-      procs[current_proc]->get_mmu()->yield_load_reservation();
+      // procs[current_proc]->get_mmu()->yield_load_reservation();
       if (++current_proc == procs.size()) {
         current_proc = 0;
         clint->increment(INTERLEAVE / INSNS_PER_RTC_TICK);
@@ -162,6 +162,23 @@ bool sim_t::mmio_load(reg_t addr, size_t len, uint8_t* bytes)
 {
   if (addr + len < addr)
     return false;
+
+  auto result = bus.load(addr, len, bytes);
+
+  bincode_mem data;
+  data.enum_idx = 5;
+  data.mem_enum_idx = 8;
+
+  pthread_mutex_lock(json_log_fd_lock);
+  for (unsigned short i = 0; i < len; i++) {
+    auto v = *(bytes + i);
+    data.addr = addr + i;
+    data.value = v & 0xff;
+    fwrite(&data, sizeof(struct bincode_mem), 1, json_log_fd);
+  }
+  fflush(json_log_fd);
+  pthread_mutex_unlock(json_log_fd_lock);
+
   return bus.load(addr, len, bytes);
 }
 
@@ -209,17 +226,20 @@ char* sim_t::addr_to_mem(reg_t addr) {
   if (auto mem = dynamic_cast<mem_t*>(desc.second))
     if (addr - desc.first < mem->size()) {
       auto v = mem->contents() + (addr - desc.first);
+
+      bincode_mem data;
+      data.enum_idx = 5;
+      data.mem_enum_idx = 8;
+
       pthread_mutex_lock(json_log_fd_lock);
-      fprintf(json_log_fd, "\n{\"kind\":\"mem\",\"type\":\"read\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr, *v & 0xff);
-      fprintf(json_log_fd, "\n{\"kind\":\"mem\",\"type\":\"read\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr + 1, *(v+1) & 0xff);
-      fprintf(json_log_fd, "\n{\"kind\":\"mem\",\"type\":\"read\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr + 2, *(v+2) & 0xff);
-      fprintf(json_log_fd, "\n{\"kind\":\"mem\",\"type\":\"read\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr + 3, *(v+3) & 0xff);
-      fprintf(json_log_fd, "\n{\"kind\":\"mem\",\"type\":\"read\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr + 4, *(v+4) & 0xff);
-      fprintf(json_log_fd, "\n{\"kind\":\"mem\",\"type\":\"read\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr + 5, *(v+5) & 0xff);
-      fprintf(json_log_fd, "\n{\"kind\":\"mem\",\"type\":\"read\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr + 6, *(v+6) & 0xff);
-      fprintf(json_log_fd, "\n{\"kind\":\"mem\",\"type\":\"read\",\"addr\":\"0x%lx\",\"value\":\"0x%lx\"}", addr + 7, *(v+7) & 0xff);
+      for (unsigned char i = 0; i < 8; i++) {
+        data.addr = addr + i;
+        data.value = *(v + i) & 0xff;
+        fwrite(&data, sizeof(data), 1, json_log_fd);
+      }
       fflush(json_log_fd);
       pthread_mutex_unlock(json_log_fd_lock);
+
       return v;
     }
   return NULL;
