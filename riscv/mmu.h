@@ -85,20 +85,21 @@ public:
 #endif
   }
 
+        // pthread_mutex_lock(json_log_fd_lock); \
+        // fwrite(&data, sizeof(data), 1, json_log_fd); \
+        // fflush(json_log_fd); \
+        // pthread_mutex_unlock(json_log_fd_lock); \
   // template for functions that load an aligned value from memory
   #define load_func(type, load_enum_idx) \
     inline type##_t load_##type(reg_t addr) { \
       type##_t m = real_load_##type(addr); \
-      if (running) { \
+      if (running && logging) { \
         struct bincode_mem data; \
         data.enum_idx = 3; \
         data.mem_enum_idx = load_enum_idx; \
         data.addr = addr; \
         data.value = m; \
-        pthread_mutex_lock(json_log_fd_lock); \
-        fwrite(&data, sizeof(data), 1, json_log_fd); \
-        fflush(json_log_fd); \
-        pthread_mutex_unlock(json_log_fd_lock); \
+        writelog(&data, sizeof(data)); \
       } \
       return m; \
     } \
@@ -134,19 +135,20 @@ public:
   load_func(int32, 6)
   load_func(int64, 7)
 
+        // pthread_mutex_lock(json_log_fd_lock); \
+        // fwrite(&data, sizeof(data), 1, json_log_fd); \
+        // fflush(json_log_fd); \
+        // pthread_mutex_unlock(json_log_fd_lock); \
   // template for functions that store an aligned value to memory
   #define store_func(type, store_enum_idx) \
     void store_##type(reg_t addr, type##_t val) { \
-      if (running) { \
+      if (running && logging) { \
         struct bincode_mem data; \
         data.enum_idx = 4; \
         data.mem_enum_idx = store_enum_idx; \
         data.addr = addr; \
         data.value = val; \
-        pthread_mutex_lock(json_log_fd_lock); \
-        fwrite(&data, sizeof(data), 1, json_log_fd); \
-        fflush(json_log_fd); \
-        pthread_mutex_unlock(json_log_fd_lock); \
+        writelog(&data, sizeof(data)); \
       } \
       if (unlikely(addr & (sizeof(type##_t)-1))) \
         return misaligned_store(addr, val, sizeof(type##_t)); \

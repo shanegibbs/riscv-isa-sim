@@ -4,10 +4,38 @@
 #include "simif.h"
 #include "processor.h"
 
+bool logging = true;
 bool running = false;
 unsigned int max_insn_count = 0;
 pthread_mutex_t *json_log_fd_lock = new pthread_mutex_t;
 FILE *json_log_fd = 0;
+
+unsigned short pos = 0;
+char *logbuf = new char[4096];
+
+void writelog(const void * ptr, size_t size)
+{
+  pthread_mutex_lock(json_log_fd_lock);
+  if (pos >= 4096 - size) {
+    pos = 0;
+  }
+  memcpy(logbuf + pos, ptr, size);
+  pos += size;
+  pthread_mutex_unlock(json_log_fd_lock);
+}
+
+void flushlog()
+{
+  pthread_mutex_lock(json_log_fd_lock);
+  // fprintf(stderr, "Size was %lu\n", pos);
+
+  fwrite(&pos, sizeof(pos), 1, json_log_fd);
+  fwrite(logbuf, pos, 1, json_log_fd);
+  fflush(json_log_fd);
+
+  pos = 0;
+  pthread_mutex_unlock(json_log_fd_lock);
+}
 
 mmu_t::mmu_t(simif_t* sim, processor_t* proc)
  : sim(sim), proc(proc),

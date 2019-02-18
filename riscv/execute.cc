@@ -148,13 +148,16 @@ void processor_t::print_state()
     s.regs[reg_i] = state.XPR[reg_i];
   }
 
-  pthread_mutex_lock(json_log_fd_lock);
-  fwrite(&mark, sizeof(mark), 1, json_log_fd);
-  fwrite(&s, sizeof(s), 1, json_log_fd);
-  fflush(json_log_fd);
-  pthread_mutex_unlock(json_log_fd_lock);
+  writelog(&mark, sizeof(mark));
+  writelog(&s, sizeof(s));
 
-  get_mmu()->flush_tlb();
+  // pthread_mutex_lock(json_log_fd_lock);
+  // fwrite(&mark, sizeof(mark), 1, json_log_fd);
+  // fwrite(&s, sizeof(s), 1, json_log_fd);
+  // fflush(json_log_fd);
+  // pthread_mutex_unlock(json_log_fd_lock);
+
+  flushlog();
 }
 
 struct __attribute__((__packed__)) bincode_insn {
@@ -167,10 +170,8 @@ struct __attribute__((__packed__)) bincode_insn {
 // fetch/decode/execute loop
 void processor_t::step(size_t n)
 {
-  print_state();
-
-  n = 1;
-  mmu->flush_tlb();
+  if (logging)
+    n = 1;
 
   if (state.dcsr.cause == DCSR_CAUSE_NONE) {
     if (halt_request) {
@@ -203,13 +204,12 @@ void processor_t::step(size_t n)
 
     try
     {
-      take_pending_interrupt();
+      // take_pending_interrupt();
 
       // if (unlikely(slow_path()))
-      if (1)
+      if (logging)
       {
         while (instret < n)
-
         {
           if (unlikely(!state.serialized && state.single_step == state.STEP_STEPPED)) {
             state.single_step = state.STEP_NONE;
@@ -223,6 +223,9 @@ void processor_t::step(size_t n)
           if (unlikely(state.single_step == state.STEP_STEPPING)) {
             state.single_step = state.STEP_STEPPED;
           }
+
+          print_state();
+          mmu->flush_tlb();
 
           insn_fetch_t fetch = mmu->load_insn(pc);
           if (debug && !state.serialized)
@@ -239,11 +242,14 @@ void processor_t::step(size_t n)
           data.bits = bits;
           data.desc = desc.length();
 
-          pthread_mutex_lock(json_log_fd_lock);
-          fwrite(&data, sizeof(data), 1, json_log_fd);
-          fputs(desc.c_str(), json_log_fd);
-          fflush(json_log_fd);
-          pthread_mutex_unlock(json_log_fd_lock);
+          writelog(&data, sizeof(data));
+          writelog(desc.c_str(), data.desc);
+
+          // pthread_mutex_lock(json_log_fd_lock);
+          // fwrite(&data, sizeof(data), 1, json_log_fd);
+          // fputs(desc.c_str(), json_log_fd);
+          // fflush(json_log_fd);
+          // pthread_mutex_unlock(json_log_fd_lock);
 
           pc = execute_insn(this, pc, fetch);
           

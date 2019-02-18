@@ -75,6 +75,8 @@ void sim_t::main() {}
 
 int sim_t::run()
 {
+  logging = true;
+
   run_pre();
 
   running = true;
@@ -94,6 +96,10 @@ int sim_t::run()
       exit(0);
     }
     count++;
+
+    // if (count >= 130000000) {
+    //   logging = true;
+    // }
 
     if (run_running()) {
       run_step();
@@ -165,19 +171,28 @@ bool sim_t::mmio_load(reg_t addr, size_t len, uint8_t* bytes)
 
   auto result = bus.load(addr, len, bytes);
 
-  bincode_mem data;
-  data.enum_idx = 5;
-  data.mem_enum_idx = 8;
+  if (logging) {
+    bincode_mem data;
+    data.enum_idx = 5;
+    data.mem_enum_idx = 8;
 
-  pthread_mutex_lock(json_log_fd_lock);
-  for (unsigned short i = 0; i < len; i++) {
-    auto v = *(bytes + i);
-    data.addr = addr + i;
-    data.value = v & 0xff;
-    fwrite(&data, sizeof(struct bincode_mem), 1, json_log_fd);
+    for (unsigned short i = 0; i < len; i++) {
+      auto v = *(bytes + i);
+      data.addr = addr + i;
+      data.value = v & 0xff;
+      writelog(&data, sizeof(struct bincode_mem));
+    }
   }
-  fflush(json_log_fd);
-  pthread_mutex_unlock(json_log_fd_lock);
+
+  // pthread_mutex_lock(json_log_fd_lock);
+  // for (unsigned short i = 0; i < len; i++) {
+  //   auto v = *(bytes + i);
+  //   data.addr = addr + i;
+  //   data.value = v & 0xff;
+  //   fwrite(&data, sizeof(struct bincode_mem), 1, json_log_fd);
+  // }
+  // fflush(json_log_fd);
+  // pthread_mutex_unlock(json_log_fd_lock);
 
   return bus.load(addr, len, bytes);
 }
@@ -227,18 +242,26 @@ char* sim_t::addr_to_mem(reg_t addr) {
     if (addr - desc.first < mem->size()) {
       auto v = mem->contents() + (addr - desc.first);
 
-      bincode_mem data;
-      data.enum_idx = 5;
-      data.mem_enum_idx = 8;
+      if (logging) {
+        bincode_mem data;
+        data.enum_idx = 5;
+        data.mem_enum_idx = 8;
 
-      pthread_mutex_lock(json_log_fd_lock);
-      for (unsigned char i = 0; i < 8; i++) {
-        data.addr = addr + i;
-        data.value = *(v + i) & 0xff;
-        fwrite(&data, sizeof(data), 1, json_log_fd);
+        for (unsigned char i = 0; i < 8; i++) {
+          data.addr = addr + i;
+          data.value = *(v + i) & 0xff;
+          writelog(&data, sizeof(data));
+        }
       }
-      fflush(json_log_fd);
-      pthread_mutex_unlock(json_log_fd_lock);
+
+      // pthread_mutex_lock(json_log_fd_lock);
+      // for (unsigned char i = 0; i < 8; i++) {
+      //   data.addr = addr + i;
+      //   data.value = *(v + i) & 0xff;
+      //   fwrite(&data, sizeof(data), 1, json_log_fd);
+      // }
+      // fflush(json_log_fd);
+      // pthread_mutex_unlock(json_log_fd_lock);
 
       return v;
     }
