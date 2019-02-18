@@ -149,6 +149,8 @@ void processor_t::print_state()
   }
 
   writelog(&mark, sizeof(mark));
+  flushlog();
+
   writelog(&s, sizeof(s));
 
   // pthread_mutex_lock(json_log_fd_lock);
@@ -157,7 +159,6 @@ void processor_t::print_state()
   // fflush(json_log_fd);
   // pthread_mutex_unlock(json_log_fd_lock);
 
-  flushlog();
 }
 
 struct __attribute__((__packed__)) bincode_insn {

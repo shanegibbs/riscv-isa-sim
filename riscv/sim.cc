@@ -75,7 +75,7 @@ void sim_t::main() {}
 
 int sim_t::run()
 {
-  logging = true;
+  logging = false;
 
   run_pre();
 
@@ -95,11 +95,12 @@ int sim_t::run()
     if (max_insn_count > 0 && count > max_insn_count) {
       exit(0);
     }
-    count++;
+    count += INTERLEAVE;
 
-    // if (count >= 130000000) {
-    //   logging = true;
-    // }
+    if (!logging && count >= 130000000) {
+      fprintf(stderr, "> Logging enabled\n");
+      logging = true;
+    }
 
     if (run_running()) {
       run_step();

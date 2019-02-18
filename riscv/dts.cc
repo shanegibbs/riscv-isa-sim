@@ -67,9 +67,12 @@ std::string make_dts(size_t insns_per_rtc_tick, size_t cpu_hz,
                      " 0x" << (clintsz >> 32) << " 0x" << (clintsz & (uint32_t)-1) << ">;\n"
          "    };\n"
          "  };\n"
-         "  htif {\n"
-         "    compatible = \"ucb,htif0\";\n"
+         "  chosen {\n"
+         "    bootargs = \"console=hvc0 loglevel=8\";\n"
          "  };\n"
+        //  "  htif {\n"
+        //  "    compatible = \"ucb,htif0\";\n"
+        //  "  };\n"
          "};\n";
   return s.str();
 }
